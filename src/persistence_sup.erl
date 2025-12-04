@@ -31,7 +31,33 @@ init([]) ->
         intensity => 0,
         period => 1
     },
-    ChildSpecs = [],
+    ChildSpecs = [
+        #{
+            id => postgresql_sup,
+            start => {postgresql_sup, start_link, []},
+            restart => permanent,
+            shutdown => 2000,
+            type => supervisor,
+            modules => [postgresql_sup]
+        },
+        #{
+            id => ets_sup,
+            start => {ets_sup, start_link, []},
+            restart => permanent,
+            shutdown => 2000,
+            type => supervisor,
+            modules => [ets_sup]
+        },
+        #{
+            id => mnesia_sup,
+            start => {mnesia_sup, start_link, []},
+            restart => permanent,
+            shutdown => 2000,
+            type => supervisor,
+            modules => [mnesia_sup]
+        }
+     % mnesia_sup
+    ],
     {ok, {SupFlags, ChildSpecs}}.
 
 %% internal functions
