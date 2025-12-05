@@ -36,6 +36,7 @@ handle_info(execute_query, State = #state{connection = Conn, query = Query, call
     
     logger:info("Query result: ~p", [Result]),
 
+    %% TODO: refactoring
     %% Tenta enviar via gen_server:cast, se falhar envia mensagem direta
     try
         gen_server:cast(Caller, {query_result, self(), Result}),
@@ -70,12 +71,10 @@ code_change(_OldVsn, State, _Extra) ->
 %%====================================================================
 
 execute_query_internal(Connection, Query) ->
-    %% Executa query usando epgsql
     case epgsql:squery(Connection, Query) of
         {ok, Columns, Rows} ->
             {ok, format_result(Columns, Rows)};
         {ok, Count} when is_integer(Count) ->
-            %% Para INSERT/UPDATE/DELETE que retornam apenas count
             {ok, Count};
         {error, Error} ->
             {error, Error}

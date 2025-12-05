@@ -1,6 +1,7 @@
 -module(postgresql_connection_fsm).
 
 -behaviour(gen_statem).
+-behaviour(poolboy_worker).
 
 -include_lib("epgsql/include/epgsql.hrl").
 
@@ -15,7 +16,7 @@
     max_reconnect_attempts = 5 :: integer()
 }).
 
--export([start_link/1, start/1, stop/0, get_connection/0]).
+-export([start_link/1, start/1, stop/0, stop/1, get_connection/0, get_connection/1]).
 
 -export([init/1, terminate/3, code_change/4, callback_mode/0]).
 
@@ -30,17 +31,23 @@
 
 start_link(Config) ->
     logger:info("Starting Connection FSM..."),
-    gen_statem:start_link({local, ?SERVER_NAME}, ?MODULE, Config, []).
+    gen_statem:start_link(?MODULE, Config, []).
 
 start(Config) ->
-    gen_statem:start({local, ?SERVER_NAME}, ?MODULE, Config, []).
+    gen_statem:start(?MODULE, Config, []).
 
 stop() ->
+    stop(?SERVER_NAME).
+
+stop(FSM) ->
     logger:info("Stoping Connection..."),
-    gen_statem:stop(?SERVER_NAME).
+    gen_statem:stop(FSM).
 
 get_connection() ->
-    gen_statem:call(?SERVER_NAME, get_connection, 5000).
+    get_connection(?SERVER_NAME).
+
+get_connection(FSM) ->
+    gen_statem:call(FSM, get_connection, 5000).
 
 %%====================================================================
 %% gen_statem callbacks
